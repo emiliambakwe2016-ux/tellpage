@@ -33,3 +33,11 @@ Verification covers creation, formatting, local saving/reopening, multiple/whole
 ## Licences
 
 Application source: copyright 2026 StartRight NG Business Ventures. All rights reserved. Third-party components retain their own licences, reproduced under `dist/licences` and listed in `THIRD_PARTY.md`. No test recordings are included in production.
+
+## Purple correction release
+
+The existing browser database and `.tellpage` backup version remain unchanged. New PDF text anchors add optional exact offsets and separate line rectangles; older regions still open. Inline voice controls contain no document text and are excluded from saved HTML. Interface themes never recolour the PDF image or apply brand colours to document paragraphs.
+
+`npm run test:corrections` checks the reported annotation/export/mobile defects. `npm run test:offline` checks the production-style unavailable `_headers` condition, saved-audio offline reopening, a legacy worker update and failed-download retry. Run a production build first. Test microphones and mobile keyboards are virtual/emulated, not physical-device verification.
+
+Autosave is always on. Offline preparation provides persistent progress beside the Settings button and confirms readiness only after cache verification and worker control. A previously open TellPage window can retain its previous app version until it is closed and reopened; saved work must not be cleared to update.
