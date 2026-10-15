@@ -81,26 +81,49 @@ export function resolvePDFAnchor(page, anchor, selectionFunction) {
 // Find a clear touch-sized gap closest to the final selected glyph. Text geometry
 // is measured after zoom/layout; saved anchors remain independent of screen size.
 export function placePDFControl(page, rects, taken) {
-  const bounds=page.getBoundingClientRect(), width=bounds.width, height=bounds.height;
-  const w=42,h=44,gap=4,last=rects.at(-1);
+  const bounds=page.getBoundingClientRect(),width=bounds.width,height=bounds.height,last=rects.at(-1);
   const end=last?{x:(last[0]+last[2])*width,y:(last[1]+last[3]/2)*height}:{x:8,y:26};
   const obstacles=[];
-  for(const span of page.querySelectorAll('.text-layer span')){
-    const range=document.createRange();range.selectNodeContents(span);
-    for(const r of range.getClientRects())if(r.width&&r.height)obstacles.push({x:r.left-bounds.left,y:r.top-bounds.top,w:r.width,h:r.height});
-  }
+  for(const span of page.querySelectorAll('.text-layer span')){const range=document.createRange();range.selectNodeContents(span);for(const r of range.getClientRects())if(r.width&&r.height)obstacles.push({x:r.left-bounds.left,y:r.top-bounds.top,w:r.width,h:r.height});}
   if(!obstacles.length)for(const r of rects)obstacles.push({x:r[0]*width,y:r[1]*height,w:r[2]*width,h:r[3]*height});
-  const candidates=[{x:end.x+gap,y:end.y-h/2}];
-  for(const r of obstacles)candidates.push({x:r.x+r.w+gap,y:end.y-h/2},{x:r.x-w-gap,y:end.y-h/2},{x:end.x+gap,y:r.y+r.h+gap},{x:end.x+gap,y:r.y-h-gap},{x:Math.max(0,Math.min(width-w,end.x)),y:r.y+r.h+gap});
-  candidates.push({x:4,y:4},{x:width-w-4,y:4},{x:4,y:height-h-4},{x:width-w-4,y:height-h-4});
-  const overlaps=(a,b)=>a.x<b.x+b.w+gap&&a.x+w+gap>b.x&&a.y<b.y+b.h+gap&&a.y+h+gap>b.y;
-  const distance=a=>Math.hypot(Math.max(a.x-end.x,0,end.x-(a.x+w)),a.y+h/2-end.y);
-  const clear=a=>a.x>=0&&a.y>=0&&a.x+w<=width&&a.y+h<=height&&!obstacles.some(b=>overlaps(a,b))&&!taken.some(b=>overlaps(a,b));
-  let chosen=candidates.sort((a,b)=>distance(a)-distance(b)).find(clear);
-  // A crowded line can use the nearest clear outside margin, linked to its end.
-  if(!chosen){const margin=[{x:width+4,y:Math.max(0,Math.min(height-h,end.y-h/2))}];for(let d=46;d<height;d+=46)margin.push({x:width+4,y:end.y-h/2+d},{x:width+4,y:end.y-h/2-d});chosen=margin.find(a=>a.y>=0&&a.y+h<=height&&!taken.some(b=>overlaps(a,b)))||{x:width+4,y:height+taken.length*46};}
-  taken.push({...chosen,w,h});
-  return {...chosen,end,width,height};
+  const gap=3,overlaps=(a,b)=>a.x<b.x+b.w+gap&&a.x+a.w+gap>b.x&&a.y<b.y+b.h+gap&&a.y+a.h+gap>b.y;
+  const clear=a=>a.x>=0&&a.y>=0&&a.x+a.w<=width&&a.y+a.h<=height&&![...obstacles,...taken].some(b=>overlaps(a,b));
+  let chosen={x:end.x+gap,y:end.y-22,w:42,h:44};
+  if(!clear(chosen)){
+    const w=26,h=28,x=Math.max(0,Math.min(width-w,end.x+gap));
+    const candidates=[{x,y:end.y-h/2,w,h}];
+    for(const r of [...obstacles,...taken])candidates.push({x:r.x+r.w+gap,y:end.y-h/2,w,h},{x:r.x-w-gap,y:end.y-h/2,w,h},{x,y:r.y+r.h+gap,w,h});
+    const distance=a=>Math.hypot(a.x-end.x,a.y+a.h/2-end.y);
+    chosen=candidates.filter(a=>a.y>=end.y-h/2&&distance(a)<=Math.max(56,(last?.[3]||0)*height*3)).sort((a,b)=>distance(a)-distance(b)).find(clear);
+    // A dense paragraph uses a compact marker aligned with its final line in the
+    // reserved gutter. Never search above it or draw through unrelated text.
+    if(!chosen){const y=Math.max(0,Math.min(height-h,end.y-h/2));const margin=[{x:width+3,y,w,h}];for(let d=h+gap;d<height;d+=h+gap)margin.push({x:width+3,y:y+d,w,h},{x:width+3,y:y-d,w,h});chosen=margin.find(a=>a.y>=0&&a.y+h<=height&&!taken.some(b=>overlaps(a,b)))||{x:width+3,y:height+taken.length*(h+gap),w,h};}
+  }
+  taken.push({...chosen});return {...chosen,end,width,height};
+}
+
+// Scroll the real rendered target through every scrollable ancestor. Retain
+// normal highlights and emphasise only the selected recording for 2.6 seconds.
+export function navigatePDF(root, annotation, selectPDF, resolvePDF) {
+  const page=root.querySelector(`[data-page="${annotation.anchor.page}"]`);if(!page)return false;
+  const resolved=resolvePDF(page,annotation.anchor,selectPDF);
+  const marks=[...page.querySelectorAll('.pdf-highlight')].filter(e=>e.dataset.annotationId===annotation.id);
+  const target=marks[0]||page;
+  if(annotation.anchor.type==='region'&&!marks.length)return false;
+  clearTimeout(root._passageTimer);root.querySelectorAll('.passage-focus').forEach(e=>e.classList.remove('passage-focus'));
+  root.dataset.activeAnnotation=annotation.id;
+  const marker=[...root.querySelectorAll('[data-voice-control]')].find(e=>e.dataset.voiceControl===annotation.id);
+  (marks.length?marks:[page]).forEach(e=>e.classList.add('passage-focus'));marker?.classList.add('passage-focus');
+  let bounds=target.getBoundingClientRect();if(marks.length){const boxes=marks.map(e=>e.getBoundingClientRect());bounds={top:Math.min(...boxes.map(r=>r.top)),bottom:Math.max(...boxes.map(r=>r.bottom)),left:Math.min(...boxes.map(r=>r.left)),right:Math.max(...boxes.map(r=>r.right))};}let left=16,right=innerWidth-16,top=24,bottom=innerHeight-24;
+  const toolbar=document.querySelector('.toolbar');if(toolbar){const r=toolbar.getBoundingClientRect();if(r.top<=24&&r.bottom>0)top=Math.max(top,r.bottom+12);}
+  const nav=document.querySelector('.nav');if(nav){const r=nav.getBoundingClientRect();if(r.top>innerHeight/2&&r.bottom<=innerHeight+2)bottom=Math.min(bottom,r.top-12);}
+  for(let parent=target.parentElement;parent&&parent!==document.body;parent=parent.parentElement){const style=getComputedStyle(parent),r=parent.getBoundingClientRect();if(/auto|scroll|hidden|clip/.test(style.overflowX)){left=Math.max(left,r.left+8);right=Math.min(right,r.right-8);}if(/auto|scroll|hidden|clip/.test(style.overflowY)&&parent.clientHeight<parent.scrollHeight){top=Math.max(top,r.top+12);bottom=Math.min(bottom,r.bottom-12);}}
+  if(bounds.top<top||bounds.bottom>bottom||bounds.left<left||bounds.right>right)target.scrollIntoView({behavior:'instant',block:'center',inline:'center'});
+  // Expose the resolved geometry for accessible identification, never mutate the
+  // saved recording or its legacy coordinates merely to navigate.
+  page.dataset.currentPassage=annotation.id;
+  root._passageTimer=setTimeout(()=>{root.querySelectorAll('.passage-focus').forEach(e=>e.classList.remove('passage-focus'));delete root.dataset.activeAnnotation;delete page.dataset.currentPassage;},2600);
+  return !!resolved;
 }
 
 export function mountAnnotations(root, annotations, resolveText, play, selectPDF, resolvePDF, placePDF) {
@@ -119,7 +142,7 @@ export function mountAnnotations(root, annotations, resolveText, play, selectPDF
       const resolved=resolvePDF(page,a.anchor,selectPDF);
       const rects=resolved.rects || (resolved.rect?[resolved.rect]:[]);
       for(const rect of rects){
-        const mark=document.createElement('span');mark.className='pdf-highlight';mark.setAttribute('aria-hidden','true');
+        const mark=document.createElement('span');mark.className='pdf-highlight';mark.dataset.annotationId=a.id;if(root.dataset.activeAnnotation===a.id)mark.classList.add('passage-focus');mark.setAttribute('aria-hidden','true');
         mark.style.cssText=`left:${rect[0]*100}%;top:${rect[1]*100}%;width:${rect[2]*100}%;height:${rect[3]*100}%`;
         page.append(mark);
       }
@@ -129,15 +152,13 @@ export function mountAnnotations(root, annotations, resolveText, play, selectPDF
       const parent=target.getBoundingClientRect(),bounds=page.getBoundingClientRect();
       position.x+=bounds.left-parent.left;position.y+=bounds.top-parent.top;
       position.end.x+=bounds.left-parent.left;position.end.y+=bounds.top-parent.top;
-      const x=position.end.x,y=position.end.y,bx=position.x+21,by=position.y+22;
-      if(Math.hypot(bx-x,by-y)>34){const link=document.createElement('span');link.className='pdf-voice-link';link.setAttribute('aria-hidden','true');link.style.cssText=`left:${x}px;top:${y}px;width:${Math.hypot(bx-x,by-y)}px;transform:rotate(${Math.atan2(by-y,bx-x)}rad)`;target.append(link);}
     } else continue;
     const button=document.createElement('button');
-    button.type='button';button.dataset.voiceControl=a.id;button.className=range?'voice-inline':'pdf-pin';
+    button.type='button';if(root.dataset.activeAnnotation===a.id)button.classList.add('passage-focus');button.dataset.voiceControl=a.id;button.className=range?'voice-inline':'pdf-pin';if(root.dataset.activeAnnotation===a.id)button.classList.add('passage-focus');
     button.contentEditable='false';button.setAttribute('aria-label',a.title?`Play ${a.title}`:'Play voice explanation');button.title=button.getAttribute('aria-label');
     button.onmousedown=e=>e.preventDefault();
     button.onclick=e=>{e.preventDefault();e.stopPropagation();play(a);};
-    if(range){const end=range.cloneRange();end.collapse(false);end.insertNode(button);}else{button.style.left=`${position.x}px`;button.style.top=`${position.y}px`;target.append(button);}
+    if(range){const end=range.cloneRange();end.collapse(false);end.insertNode(button);}else{button.style.cssText=`left:${position.x}px;top:${position.y}px;width:${position.w}px;height:${position.h}px;min-height:${position.h}px;min-width:0`;button.dataset.compact=position.w<42?'true':'false';target.append(button);}
   }
   if (globalThis.CSS?.highlights && globalThis.Highlight) CSS.highlights.set('voice',new Highlight(...textRanges));
   return textRanges;

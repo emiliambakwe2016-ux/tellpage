@@ -12,7 +12,8 @@
     "test": "node tests/fixtures.mjs && node tests/run.mjs && node tests/edge.mjs",
     "test:corrections": "node tests/corrections.mjs && node tests/mobile-editing.mjs",
     "test:offline": "node tests/production.mjs && node tests/offline-upgrade.mjs",
-    "test:reliability": "node tests/reliability.mjs && node tests/sessions.mjs"
+    "test:reliability": "node tests/reliability.mjs && node tests/sessions.mjs",
+    "test:pdf": "node tests/pdf-navigation.mjs"
   },
   "keywords": [],
   "author": "",
