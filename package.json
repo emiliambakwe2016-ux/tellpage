@@ -9,7 +9,7 @@
   "scripts": {
     "dev": "vite --host 127.0.0.1",
     "build": "node scripts/assets.mjs && vite build && node scripts/sw.mjs",
-    "test": "node tests/fixtures.mjs && node tests/run.mjs"
+    "test": "node tests/fixtures.mjs && node tests/run.mjs && node tests/edge.mjs"
   },
   "keywords": [],
   "author": "",

@@ -15,3 +15,9 @@ PDF exports use rendered page images and an overlay, retaining visual layout; th
 A proportionate preliminary web search did not identify an obvious TellPage document/voice software conflict; this is not a formal trademark search or legal clearance.
 
 Five product addresses on the About page were verified against their existing Cloudflare domain bindings (Reveal Right: active Pages domain). Public page fetches from the local environment were network-restricted. Reveal Right is described generically instead of assigning unverified features.
+
+## Final interaction and deployment checks
+
+Additional browser tests passed undo/redo, replacing a recording without duplicating it, changed-passage warnings, reattaching audio and deleting an annotation while preserving the document. Storage-quota failure and microphone-denial feedback were exercised. A focus-related reattachment defect found by this check was corrected and retested before the final release.
+
+Cloudflare Pages production deployment and `tellpage.startright.ng` domain/HTTPS activation were confirmed through the connected API. The permanent HTTPS URL was also opened in the cloud browser and displayed the real Create workspace, three primary navigation menus, editor and recording controls without a sign-in wall. Production files are uploaded as static assets only. Created resources: one Pages project (`tellpage`), its custom domain and one CNAME record. No D1, KV or R2 resource was created.
