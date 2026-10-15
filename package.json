@@ -1,0 +1,34 @@
+{
+  "name": "tellpage",
+  "version": "1.0.0",
+  "description": "Give your documents a voice. Private, local-first document and voice annotation PWA.",
+  "main": "index.js",
+  "directories": {
+    "test": "tests"
+  },
+  "scripts": {
+    "dev": "vite --host 127.0.0.1",
+    "build": "node scripts/assets.mjs && vite build && node scripts/sw.mjs",
+    "test": "node tests/fixtures.mjs && node tests/run.mjs"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "UNLICENSED",
+  "type": "module",
+  "dependencies": {
+    "@tesseract.js-data/eng": "1.0.0",
+    "dompurify": "3.4.17",
+    "mammoth": "1.13.0",
+    "pdfjs-dist": "6.4.299",
+    "tesseract.js": "7.0.0"
+  },
+  "devDependencies": {
+    "@sparticuz/chromium": "153.0.0",
+    "docx": "9.11.0",
+    "pdf-lib": "1.17.1",
+    "playwright": "1.64.1",
+    "sharp": "0.35.5",
+    "vite": "8.3.4"
+  },
+  "private": true
+}

@@ -1,0 +1,2 @@
+import {chromium as playwright} from 'playwright';
+export async function launch(extra=[]){return playwright.launch({executablePath:process.env.CHROME_BIN||playwright.executablePath(),args:['--no-sandbox','--use-gl=angle','--use-angle=swiftshader','--enable-unsafe-swiftshader','--disable-dev-shm-usage','--no-zygote','--use-fake-ui-for-media-stream','--use-fake-device-for-media-stream',...extra],env:{...process.env,LD_LIBRARY_PATH:'/tmp/chrome-deps:/tmp/chrome-deps/al2023/lib'},headless:true});}
