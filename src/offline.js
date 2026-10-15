@@ -30,4 +30,5 @@ export async function prepareOffline(notice){
  }catch(e){offlineState.text=e.message||'Offline preparation did not finish. Please try again online.';notice('Offline preparation did not finish. See the status beside the button.');}
  finally{offlineState.busy=false;refresh();}
 }
-export async function startOffline(){try{const reg=await registration();if(reg.active){const result=await message(reg.active,'VERIFY');if(result.complete){offlineState.ready=true;offlineState.text='Ready for offline use.';refresh();}}}catch{/* The preparation control gives an explicit retry and actionable status. */}}
+export async function startOffline(){try{const reg=await registration();const worker=reg.active;if(worker){const result=await message(worker,'VERIFY');if(reg.active!==worker)return;offlineState.ready=!!result.complete;offlineState.text=result.complete?'Ready for offline use.':'Prepare offline tools before disconnecting.';refresh();}}catch{/* The preparation control gives an explicit retry and actionable status. */}}
+if('serviceWorker'in navigator)navigator.serviceWorker.addEventListener('controllerchange',()=>{if(!offlineState.busy)startOffline();});
