@@ -1,0 +1,55 @@
+{
+  "sourceCommit": "aaa8875",
+  "measurements": [
+    {
+      "width": 320,
+      "height": 720,
+      "editorTop": 393,
+      "textTop": 413,
+      "visibleWriting": 234.21875,
+      "header": 66,
+      "title": 86,
+      "toolbar": 55
+    },
+    {
+      "width": 360,
+      "height": 800,
+      "editorTop": 352,
+      "textTop": 372,
+      "visibleWriting": 355.21875,
+      "header": 66,
+      "title": 69,
+      "toolbar": 55
+    },
+    {
+      "width": 390,
+      "height": 844,
+      "editorTop": 352,
+      "textTop": 372,
+      "visibleWriting": 399.21875,
+      "header": 66,
+      "title": 69,
+      "toolbar": 55
+    },
+    {
+      "width": 412,
+      "height": 915,
+      "editorTop": 352,
+      "textTop": 372,
+      "visibleWriting": 484,
+      "header": 66,
+      "title": 69,
+      "toolbar": 55
+    },
+    {
+      "width": 1440,
+      "height": 1000,
+      "editorTop": 431,
+      "textTop": 463,
+      "visibleWriting": -443.90625,
+      "header": 80,
+      "title": 77,
+      "toolbar": 55
+    }
+  ]
+}

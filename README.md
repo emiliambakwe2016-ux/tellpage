@@ -51,3 +51,9 @@ Pages redirects `/index.html` to `/`. The worker requests the canonical shell an
 ## PDF passage navigation release
 
 `npm run test:pdf` creates a three-page real PDF and six recordings, verifies each exact passage in the editor and the independently exported offline HTML, and checks zoom/resizing, geometry, temporary emphasis, compact controls and duration fallback. `TELLPAGE_PRODUCTION=1 npm run test:pdf` runs the same acceptance test against the compiled build and production CSP. Audio uses stored duration until valid metadata is available; its original bytes and backup schema are unchanged. PDF highlights carry annotation IDs so Go to passage targets selected lines rather than a whole page.
+
+## Compact mobile writing workspace
+
+Mobile Create keeps document actions in a labelled Document dropdown, a compact editable title, and a single row containing the scrolling formatting controls plus Add voice. The desktop action strip is preserved. Keyboard-sized visual viewports retain all three navigation menus and keep the active caret above them. No project data or storage schema changes are involved.
+
+`npm run test:workspace` checks layout measurements against `tests/mobile-baseline.json`, editing/recording/persistence, keyboard viewport behaviour, navigation and desktop breakpoint restoration. `TELLPAGE_PRODUCTION=1 npm run test:workspace` runs against a production build/CSP. `node tests/mobile-measure.mjs` collects geometry without editing a document. Baseline values were captured from aaa8875 before this change. Physical OPPO testing remains distinct from automated touch emulation.
